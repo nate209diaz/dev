@@ -1,0 +1,23 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: my-web-deployment
+  labels:
+    env   : prod
+    app   : main
+    tier  : frontend
+    owner : Kostik
+  spec:
+    selector:
+      matchLabels:
+      project: test
+  template:
+    metadata:
+      labels:
+        project: test
+  spec:
+    containers:
+      - name : test-web
+        image: nginx:latest
+        ports:
+          - containerPort: 80
