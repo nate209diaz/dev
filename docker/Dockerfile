@@ -1,6 +1,6 @@
 FROM tomcat
 
-RUN apt-get update && apt-get install nano
+RUN apt-get update && apt-get install -y nano
 
 VOLUME /usr/local/tomcat/webapps/test
 
