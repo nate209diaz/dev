@@ -4,20 +4,21 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 try:
     connnect_db = psycopg2.connect(
-    host = "localhost",
-    port = "5433",
-    database = "test_multi",
-    user = "postgres",
-    password = "")
+        host="localhost",
+        port="5432",
+        database="test_multi",
+        user="postgres",
+        password="")
     cursor = connnect_db.cursor()
     print("Вы успешно подключились к базе данных test_multi")
 except (Exception, Error) as error:
     print("Ошибка на этапе подключения к базе данных test_multi: ", error)
-    
+
 exit_code = 0
 while exit_code == 0:
     print('''
         1 - Показать колличество лицензий
+        2 - Размер базы данных
         0 - Завершить работу и закрыть соединение:  ''')
     answer = int(input("Что делаем?  "))
     if answer == exit_code:
@@ -26,51 +27,67 @@ while exit_code == 0:
         print('До скорой встречи!')
         break
     elif answer == 1:
-        exit_code = 0
-        while exit_code == 0:
+        while True:
             print("""
                     Введите название ову например 'урог'
                     если хотите все лицензии напишите 'все'
                     если нужна просто сумма всех лицензий напишите 'сумма'
                     если хотите вернуться назад напишите 'назад': """)
-            name_ovu = str(input("Что делаем?  "))
-            list = name_ovu.lower()
+            name_ovu = str(input("Что делаем?  ")).lower()
+            list = name_ovu.split()
             if 'назад' in list:
                 print("Идем назад")
                 break
             else:
-                sql_query = f'''select c."Name" as "ОВУ", count(*) as "Сколько лицензий", (select sum("Сколько лицензий") as "Общее колличество лицензий" 
-from (select c."Name" as "ОВУ", count(*) as "Сколько лицензий"
+                sql_query = f'''
+select c."Name", count(*), (select sum(count)
+from (select c."Name", count(*)
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' and a."Name"!='SYSTEM1' and a."Name"!='System' and a."Name"!='Admin' 
+where a."Фиктивный"='0' 
+and a."Name"!='SYSTEM1' 
+and a."Name"!='System' 
+and a."Name"!='Admin' 
 group by c."Name") as x) 
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' and a."Name"!='SYSTEM1' and a."Name"!='System' and a."Name"!='Admin'  and c."Name" ilike '%%{name_ovu}%%'
-group by c."Name"'''
-                sql_query2 = f'''select c."Name" as "ОВУ", count(*) as "Сколько лицензий", (select sum("Сколько лицензий") as "Общее колличество лицензий" 
-from (select c."Name" as "ОВУ", count(*) as "Сколько лицензий"
+where a."Фиктивный"='0' 
+and a."Name"!='SYSTEM1' 
+and a."Name"!='System' 
+and a."Name"!='Admin'
+and c."Name" ilike '%%{name_ovu}%%'
+group by c."Name"
+'''
+                sql_query2 = f'''
+select c."Name", count(*), (select sum(count)
+from (select c."Name", count(*)
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' and a."Name"!='SYSTEM1' and a."Name"!='System' and a."Name"!='Admin' 
+where a."Фиктивный"='0' 
+and a."Name"!='SYSTEM1' 
+and a."Name"!='System' 
+and a."Name"!='Admin' 
 group by c."Name") as x) 
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' and a."Name"!='SYSTEM1' and a."Name"!='System' and a."Name"!='Admin'
-group by c."Name"'''
+where a."Фиктивный"='0' 
+and a."Name"!='SYSTEM1' 
+and a."Name"!='System' 
+and a."Name"!='Admin'
+group by c."Name"
+'''
                 if 'все' in list:
                     try:
                         cursor.execute(sql_query2)
                         for row in cursor:
                             print("ОВУ = ", row[0], )
                             print("Лицензий в ОВУ = ", row[1])
-                #results = cursor.fetchall()[:2]
-                #print(results)
+                    # results = cursor.fetchall()[:2]
+                    # print(results)
                     except(Exception, Error) as error:
                         print("Ошибка при выполнении запроса: ", error)
                 elif 'сумма' in list:
@@ -87,7 +104,48 @@ group by c."Name"'''
                         for row in cursor:
                             print("ОВУ = ", row[0], )
                             print("Лицензий в ОВУ = ", row[1])
-                #results = cursor.fetchone()[:2]
-                #print(results)
+                    # results = cursor.fetchone()[:2]
+                    # print(results)
                     except(Exception, Error) as error:
                         print("Ошибка при выполнении запроса: ", error)
+    elif answer == 2:
+        while True:
+            print('''
+            1 - Размер определенной БД
+            2 - Размер всех БД
+            0 - Назад
+            ''')
+            answer = str(input()).lower()
+            list = answer.split()
+            if '0' in list:
+                print("Идем назад")
+                break
+            elif '1' in list:
+                try:
+                    name_bd = str(input("Введите название БД:  ")).lower()
+                    list = name_bd.split()
+                    sql_query = f'''select pg_database.datname, 
+                    pg_size_pretty(pg_database_size(pg_database.datname))
+                    from pg_database where datname != 'template0' 
+                    and  datname != 'template1'
+                    and datname ilike '%%{name_bd}%%'
+                    '''
+                    cursor.execute(sql_query, name_bd)
+                    for row in cursor:
+                        print("Наименование БД = ", row[0], )
+                        print("Размер БД = ", row[1])
+                except(Exception, Error) as error:
+                    print("Ошибка при выполнении запроса: ", error)
+            elif '2' in list:
+                try:
+                    sql_query = f'''select pg_database.datname, 
+                                        pg_size_pretty(pg_database_size(pg_database.datname))
+                                        from pg_database where datname != 'template0' 
+                                        and  datname != 'template1'
+                                        '''
+                    cursor.execute(sql_query)
+                    for row in cursor:
+                        print("Наименование БД = ", row[0], )
+                        print("Размер БД = ", row[1])
+                except(Exception, Error) as error:
+                    print("Ошибка при выполнении запроса: ", error)
