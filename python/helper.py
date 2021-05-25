@@ -57,7 +57,7 @@ where a."Фиктивный"='0'
 and a."Name"!='SYSTEM1' 
 and a."Name"!='System' 
 and a."Name"!='Admin'
-and c."Name" ilike '%%{name_ovu}%%'
+and c."Name" ilike any(%s)
 group by c."Name"
 '''
                 sql_query2 = f'''
@@ -100,10 +100,11 @@ group by c."Name"
                         print("Ошибка при выполнении запроса: ", error)
                 else:
                     try:
-                        cursor.execute(sql_query, name_ovu)
-                        for row in cursor:
-                            print("ОВУ = ", row[0], )
-                            print("Лицензий в ОВУ = ", row[1])
+                        for name in list:
+                            cursor.execute(sql_query, ("{%"+name+"%}",))
+                            for row in cursor:
+                                print("ОВУ = ", row[0], )
+                                print("Лицензий в ОВУ = ", row[1])
                     # results = cursor.fetchone()[:2]
                     # print(results)
                     except(Exception, Error) as error:
@@ -115,7 +116,7 @@ group by c."Name"
             2 - Размер всех БД
             0 - Назад
             ''')
-            answer = str(input()).lower()
+            answer = str(input("Что делаем?  ")).lower()
             list = answer.split()
             if '0' in list:
                 print("Идем назад")
@@ -128,12 +129,13 @@ group by c."Name"
                     pg_size_pretty(pg_database_size(pg_database.datname))
                     from pg_database where datname != 'template0' 
                     and  datname != 'template1'
-                    and datname ilike '%%{name_bd}%%'
+                    and datname ilike any(%s)
                     '''
-                    cursor.execute(sql_query, name_bd)
-                    for row in cursor:
-                        print("Наименование БД = ", row[0], )
-                        print("Размер БД = ", row[1])
+                    for name in list:
+                        cursor.execute(sql_query, ("{%"+name+"%}",))
+                        for row in cursor:
+                            print("Наименование БД = ", row[0], )
+                            print("Размер БД = ", row[1])
                 except(Exception, Error) as error:
                     print("Ошибка при выполнении запроса: ", error)
             elif '2' in list:
