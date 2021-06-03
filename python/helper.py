@@ -16,10 +16,10 @@ except (Exception, Error) as error:
 
 exit_code = 0
 while exit_code == 0:
-    print('''
-        1 - Показать колличество лицензий
-        2 - Размер базы данных
-        0 - Завершить работу и закрыть соединение:  ''')
+    print("""
+\t1 - Показать колличество лицензий
+\t2 - Размер базы данных
+\t0 - Завершить работу и закрыть соединение""")
     answer = int(input("Что делаем?  "))
     if answer == exit_code:
         cursor.close()
@@ -29,27 +29,18 @@ while exit_code == 0:
     elif answer == 1:
         while True:
             print("""
-                    Введите название ову например 'урог'
-                    если хотите все лицензии напишите 'все'
-                    если нужна просто сумма всех лицензий напишите 'сумма'
-                    если хотите вернуться назад напишите 'назад': """)
+\tВведите название ову например 'урог'
+\tесли хотите все лицензии напишите 'все'
+\tесли нужна просто сумма всех лицензий напишите 'сумма'
+\tесли хотите вернуться назад напишите 'назад' """)
             name_ovu = str(input("Что делаем?  ")).lower()
             list = name_ovu.split()
             if 'назад' in list:
                 print("Идем назад")
                 break
             else:
-                sql_query = f'''
-select c."Name", count(*), (select sum(count)
-from (select c."Name", count(*)
-from "SAOOG"."SystemUsers" as a
-join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
-join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' 
-and a."Name"!='SYSTEM1' 
-and a."Name"!='System' 
-and a."Name"!='Admin' 
-group by c."Name") as x) 
+                sql_query = '''
+select c."Name", count(*)
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
@@ -60,9 +51,8 @@ and a."Name"!='Admin'
 and c."Name" ilike any(%s)
 group by c."Name"
 '''
-                sql_query2 = f'''
-select c."Name", count(*), (select sum(count)
-from (select c."Name", count(*)
+                sql_query2 = '''
+select sum(count) from (select c."Name", count(*)
 from "SAOOG"."SystemUsers" as a
 join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
 join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
@@ -70,15 +60,7 @@ where a."Фиктивный"='0'
 and a."Name"!='SYSTEM1' 
 and a."Name"!='System' 
 and a."Name"!='Admin' 
-group by c."Name") as x) 
-from "SAOOG"."SystemUsers" as a
-join "SAOOG"."Подразделения" as b on a."Отдел"=b."RecordId"
-join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
-where a."Фиктивный"='0' 
-and a."Name"!='SYSTEM1' 
-and a."Name"!='System' 
-and a."Name"!='Admin'
-group by c."Name"
+group by c."Name") as x
 '''
                 if 'все' in list:
                     try:
@@ -93,9 +75,8 @@ group by c."Name"
                 elif 'сумма' in list:
                     try:
                         cursor.execute(sql_query2)
-                        results = cursor.fetchmany(1)
-                        for row in results:
-                            print("Общее колличество лицензий = ", row[2])
+                        for row in cursor:
+                            print("Общее колличество лицензий = ", row[0])
                     except(Exception, Error) as error:
                         print("Ошибка при выполнении запроса: ", error)
                 else:
@@ -105,16 +86,14 @@ group by c."Name"
                             for row in cursor:
                                 print("ОВУ = ", row[0], )
                                 print("Лицензий в ОВУ = ", row[1])
-                    # results = cursor.fetchone()[:2]
-                    # print(results)
                     except(Exception, Error) as error:
                         print("Ошибка при выполнении запроса: ", error)
     elif answer == 2:
         while True:
             print('''
-            1 - Размер определенной БД
-            2 - Размер всех БД
-            0 - Назад
+\t1 - Размер определенной БД
+\t2 - Размер всех БД
+\t0 - Назад
             ''')
             answer = str(input("Что делаем?  ")).lower()
             list = answer.split()
@@ -125,11 +104,9 @@ group by c."Name"
                 try:
                     name_bd = str(input("Введите название БД:  ")).lower()
                     list = name_bd.split()
-                    sql_query = f'''select pg_database.datname, 
+                    sql_query = '''select pg_database.datname, 
                     pg_size_pretty(pg_database_size(pg_database.datname))
-                    from pg_database where datname != 'template0' 
-                    and  datname != 'template1'
-                    and datname ilike any(%s)
+                    from pg_database where datname ilike any(%s)
                     '''
                     for name in list:
                         cursor.execute(sql_query, ("{%"+name+"%}",))
@@ -140,11 +117,11 @@ group by c."Name"
                     print("Ошибка при выполнении запроса: ", error)
             elif '2' in list:
                 try:
-                    sql_query = f'''select pg_database.datname, 
-                                        pg_size_pretty(pg_database_size(pg_database.datname))
-                                        from pg_database where datname != 'template0' 
-                                        and  datname != 'template1'
-                                        '''
+                    sql_query = '''select pg_database.datname, 
+                    pg_size_pretty(pg_database_size(pg_database.datname))
+                    from pg_database where datname != 'template0' 
+                    and  datname != 'template1'
+                    '''
                     cursor.execute(sql_query)
                     for row in cursor:
                         print("Наименование БД = ", row[0], )
