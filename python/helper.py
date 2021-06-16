@@ -30,8 +30,9 @@ while exit_code == 0:
         while True:
             print("""
 \tВведите название ову например 'урог'
-\tесли хотите все лицензии напишите 'все'
+\tесли хотите все лицензии напишите 'лицензии'
 \tесли нужна просто сумма всех лицензий напишите 'сумма'
+\tесли хотите колличество организаций напишите 'организации'
 \tесли хотите вернуться назад напишите 'назад' """)
             name_ovu = str(input("Что делаем?  ")).lower()
             list = name_ovu.split()
@@ -48,6 +49,7 @@ where a."Фиктивный"='0'
 and a."Name"!='SYSTEM1' 
 and a."Name"!='System' 
 and a."Name"!='Admin'
+and a."RecordId" !='00000000-0000-0000-0000-000000000000'
 and c."Name" ilike any(%s)
 group by c."Name"
 '''
@@ -59,9 +61,14 @@ join "SAOOG"."Организации" as c on c."RecordId"=b."Root"
 where a."Фиктивный"='0' 
 and a."Name"!='SYSTEM1' 
 and a."Name"!='System' 
-and a."Name"!='Admin' 
+and a."Name"!='Admin'
+and a."RecordId" !='00000000-0000-0000-0000-000000000000'
 group by c."Name") as x
 '''
+                sql_query3 = '''
+select count(*) from "SAOOG"."Организации" where "Домен" !='00000000-0000-0000-0000-000000000000'
+'''
+
                 if 'все' in list:
                     try:
                         cursor.execute(sql_query2)
@@ -77,6 +84,13 @@ group by c."Name") as x
                         cursor.execute(sql_query2)
                         for row in cursor:
                             print("Общее колличество лицензий = ", row[0])
+                    except(Exception, Error) as error:
+                        print("Ошибка при выполнении запроса: ", error)
+                elif 'организации' in list:
+                    try:
+                        cursor.execute(sql_query3)
+                        for row in cursor:
+                            print("Общее колличество организаций = ", row[0])
                     except(Exception, Error) as error:
                         print("Ошибка при выполнении запроса: ", error)
                 else:
